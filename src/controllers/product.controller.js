@@ -5,26 +5,18 @@ import { v2 as cloudinary } from "cloudinary";
 export const createProduct = async (req, res) => {
   try {
     const { name, description, price, stock, category } = req.body;
-    const images = [];
 
     // Upload images to Cloudinary
-    if (req.files && req.files.length > 0) {
-      for (const file of req.files) {
-        const result = await cloudinary.uploader.upload(file.path, {
-          folder: "ecommerce/products",
-          width: 500,    
-          height: 500,
-          crop: "fill",
-          gravity: "auto",
-        });
-        images.push(result.secure_url); // Cloudinary URL
-      }
+    if (!req.files && req.files.length === 0) {
+        return res.status(400).json({message: "At least one image is required"});
     }
+
+    const images = req.files.map(file => file.path); 
 
     const product = await Product.create({
       name,
       description,
-      price,
+      price: Number(price),
       stock,
       category,
       images,
@@ -68,20 +60,21 @@ export const updateProduct = async (req, res) => {
     // Update fields
     product.name = name || product.name;
     product.description = description || product.description;
-    product.price = price || product.price;
-    product.stock = stock || product.stock;
+    product.price = price ? Number(price) : product.price;
+    product.stock = stock !== undefined ? stock : product.stock;
     product.category = category || product.category;
 
     // Upload new images if provided
     if (req.files && req.files.length > 0) {
-      const images = [];
-      for (const file of req.files) {
-        const result = await cloudinary.uploader.upload(file.path, {
-          folder: "ecommerce/products",
-        });
-        images.push(result.secure_url);
+      // Deleted old image
+      for(const oldUrl of product.images){
+        const parts = oldUrl.split('/');
+        const filename = parts[parts.length - 1]; // acb123.jpg
+        const publicId = `ecommerce/products/${filename.split('.')[0]}`;
+        await cloudinary.uploader.destroy(publicId);
       }
-      product.images = images;
+      // Replace a new image upload
+      product.images = req.files.map(file => file.path);
     }
 
     await product.save();
