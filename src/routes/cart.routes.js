@@ -12,8 +12,8 @@ const router = express.Router();
 router.use(protect); // All cart routes are protected
 
 router.get("/", getCart);
-router.post("/add", addToCart);
-router.put("/update", updateCartItem);
-router.delete("/remove", removeCartItem);
+router.post("/add",protect, addToCart);
+router.put("/update/:productId", updateCartItem);
+router.delete("/remove/:prod", removeCartItem);
 
 export default router;
