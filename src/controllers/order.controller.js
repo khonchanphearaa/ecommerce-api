@@ -1,6 +1,5 @@
 import Order from "../models/Order.js";
 import Cart from "../models/Cart.js";
-// import { Order } from "../models/Order.js";
 
 // Create Order from Cart
 export const createOrder = async (req, res) => {
@@ -10,7 +9,7 @@ export const createOrder = async (req, res) => {
       return res.status(400).json({ message: "Cart is empty" });
 
     let totalPrice = 0;
-    const orderItems = cart.items.map(item => {
+    const orderItems = cart.items.map((item) => {
       totalPrice += item.product.price * item.quantity;
       return {
         product: item.product._id,
@@ -23,8 +22,6 @@ export const createOrder = async (req, res) => {
       user: req.userId,
       items: orderItems,
       totalPrice,
-      status: "PENDING",
-      isPaid: false
     });
 
     // Clear cart after order
@@ -36,6 +33,7 @@ export const createOrder = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
 
 // Get User Orders
 export const getUserOrders = async (req, res) => {
