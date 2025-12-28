@@ -1,38 +1,51 @@
+import mongoose from "mongoose";
 import Order from "../models/Order.js";
 import Cart from "../models/Cart.js";
+import Product from "../models/Product.js";
 
 // Create Order from Cart
-export const createOrder = async (req, res) => {
+// export const createOrder = async (req, res) => {
+//   try {
+//     const cart = await Cart.findOne({ user: req.userId }).populate("items.product");
+//     if (!cart || cart.items.length === 0)
+//       return res.status(400).json({ message: "Cart is empty" });
+
+//     let totalPrice = 0;
+//     const orderItems = cart.items.map((item) => {
+//       totalPrice += item.product.price * item.quantity;
+//       return {
+//         product: item.product._id,
+//         quantity: item.quantity,
+//         price: item.product.price
+//       };
+//     });
+
+//     const order = await Order.create({
+//       user: req.userId,
+//       items: orderItems,
+//       totalPrice,
+//     });
+
+//     // Clear cart after order
+//     cart.items = [];
+//     await cart.save();
+
+//     res.status(201).json({ message: "Order created", order });
+//   } catch (error) {
+//     res.status(500).json({ message: "Server error" });
+//   }
+// };
+
+export const createOrder = async(req, res) =>{
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
-    const cart = await Cart.findOne({ user: req.userId }).populate("items.product");
-    if (!cart || cart.items.length === 0)
-      return res.status(400).json({ message: "Cart is empty" });
-
-    let totalPrice = 0;
-    const orderItems = cart.items.map((item) => {
-      totalPrice += item.product.price * item.quantity;
-      return {
-        product: item.product._id,
-        quantity: item.quantity,
-        price: item.product.price
-      };
-    });
-
-    const order = await Order.create({
-      user: req.userId,
-      items: orderItems,
-      totalPrice,
-    });
-
-    // Clear cart after order
-    cart.items = [];
-    await cart.save();
-
-    res.status(201).json({ message: "Order created", order });
+    // const cart = await.findOne
   } catch (error) {
-    res.status(500).json({ message: "Server error" });
+    
   }
-};
+}
 
 
 // Get User Orders
