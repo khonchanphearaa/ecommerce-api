@@ -14,6 +14,6 @@ router.use(protect); // All cart routes are protected
 router.get("/", getCart);
 router.post("/add",protect, addToCart);
 router.put("/update/:productId", updateCartItem);
-router.delete("/remove/:prod", removeCartItem);
+router.delete("/remove/:productId", removeCartItem);
 
 export default router;
