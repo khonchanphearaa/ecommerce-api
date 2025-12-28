@@ -22,17 +22,31 @@ export const addToCart = async (req, res) => {
     if (!product) return res.status(404).json({ message: "Product not found" });
 
     let cart = await Cart.findOne({ user: req.userId });
-
+    
+    /* alert quanity cart if > stock product */
     if (!cart) {
-      cart = await Cart.create({
-        user: req.userId,
-        items: [{ product: productId, quantity }]
-      });
+      if(quantity > product.stock){
+      return res.status(400).json({message: "Not enough stock avaliable!"});
+    }
+
+    cart = await Cart.create({
+      user: req.userId,
+      items: [{ product: productId, quantity }]
+    });
+    
     } else {
       const item = cart.items.find(i => i.product.toString() === productId);
       if (item) {
+        
+        /* fix: if qty > stock */
+        if(item.quantity + quantity > product.stock)
+          return res.status(400).json({message: "Quantity exceeds avaliable stock!"});
         item.quantity += quantity;
       } else {
+        
+        /* check: status qty */
+        if(quantity > product.stock)
+          return res.status(400).json({message: "Not enough stock avaliable!"});
         cart.items.push({ product: productId, quantity });
       }
       await cart.save();
@@ -45,28 +59,6 @@ export const addToCart = async (req, res) => {
 };
 
 // Update Cart Item
-// export const updateCartItem = async (req, res) => {
-//   try {
-//     const {productId} = req.params;
-//     const quantity = Number(req.body.quantity);
-
-//     if(quantity <= 0) return res.status(400).json({
-//       message: "Quantity must be greater than 0"
-//     });
-//     const cart = await findOne({user: req.userId});
-//     if(!cart) return res.status(404).json({message: "Cart not found" });
-
-//     const item = cart.items.find(i => i.product.toString() === productId);
-//     if(!item) return res.status(404).json({message: "Product not in cart"});
-
-//     item.quantity = quantity;
-//     await cart.save();
-
-//     res.json({message: "Cart item updated!", cart});
-//   } catch (error) {
-//     res.status(500).json({message: error.message});
-//   }
-// };
 export const updateCartItem = async (req, res) => {
   try {
     const { productId } = req.params;
@@ -90,6 +82,16 @@ export const updateCartItem = async (req, res) => {
     if (!item) {
       return res.status(404).json({ message: "Product not in cart" });
     }
+
+    /* find: productbyid update */
+    const product = await Product.findById(productId);
+    if(!product)
+      return res.status(404).json({message: "Product not found!"});
+
+    /* update: qty > product stock */
+    if(quantity > product.stock)
+      return res.status(400).json({message: "Quantity exceeds avaliable stock"});
+    
 
     item.quantity = quantity;
     await cart.save();
