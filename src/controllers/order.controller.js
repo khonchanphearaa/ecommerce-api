@@ -4,46 +4,74 @@ import Cart from "../models/Cart.js";
 import Product from "../models/Product.js";
 
 // Create Order from Cart
-// export const createOrder = async (req, res) => {
-//   try {
-//     const cart = await Cart.findOne({ user: req.userId }).populate("items.product");
-//     if (!cart || cart.items.length === 0)
-//       return res.status(400).json({ message: "Cart is empty" });
-
-//     let totalPrice = 0;
-//     const orderItems = cart.items.map((item) => {
-//       totalPrice += item.product.price * item.quantity;
-//       return {
-//         product: item.product._id,
-//         quantity: item.quantity,
-//         price: item.product.price
-//       };
-//     });
-
-//     const order = await Order.create({
-//       user: req.userId,
-//       items: orderItems,
-//       totalPrice,
-//     });
-
-//     // Clear cart after order
-//     cart.items = [];
-//     await cart.save();
-
-//     res.status(201).json({ message: "Order created", order });
-//   } catch (error) {
-//     res.status(500).json({ message: "Server error" });
-//   }
-// };
-
 export const createOrder = async(req, res) =>{
   const session = await mongoose.startSession();
   session.startTransaction();
 
   try {
-    // const cart = await.findOne
-  } catch (error) {
+    const cart = await Cart.findOne({user: req.userId})
+    .populate("items.product")
+    .session(session);
+
+    if(!cart || cart.items.length === 0){
+      return res.status(400).json({message: "Cart is empty"});
+    }
+    let totalPrice = 0;
+    const orderItems = [];
+
+    /* Validation stock & calculate price */
+    for(const item of cart.items){
+      const product = await Product.findById(item.product._id).session(session);
+
+      if(!product){
+        throw new Error("Product not found!");
+      }
+      
+      if(item.quantity > product.stock){
+        throw new Error(`Not enough stock for ${product.name}`);
+      }
+      totalPrice += product.price * item.quantity;
+
+      /* Push item to array */
+      orderItems.push({
+        product: product._id,
+        quantity: item.quantity,
+        price: product.price
+      });
+      
+      totalPrice += product.price * item.quantity;
+    }
+
+    /* Create order */
+    const order = await Order.create(
+      [
+        {
+          user: req.userId,
+          items: orderItems,
+          totalPrice,
+          status: "PENDING",
+          isPaid: false
+          
+        }
+      ],
+      {session}
+    );
     
+    /* Clear the cart */
+    await Cart.deleteOne({user: req.userId}).session(session);
+
+    await session.commitTransaction();
+    session.endSession();
+
+    res.status(201).json({
+      message: "Order created sucessfully.",
+      order: order[0]
+    });
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+
+    res.status(500).json({message: error.message});
   }
 }
 
@@ -76,8 +104,16 @@ export const updateOrderStatus = async (req, res) => {
     const order = await Order.findById(req.params.id);
     if (!order) return res.status(404).json({ message: "Order not found" });
 
-    order.status = status || order.status;
-    if (isPaid !== undefined) order.isPaid = isPaid;
+    if (!["PAID", "SHIPPED", "CANCELLED"].includes(status)) {
+      return res.status(400).json({ message: "Invalid status" });
+    }
+
+    order.status = status;
+
+    if (status === "PAID") {
+      order.isPaid = true;
+      order.paidAt = new Date();
+    }
 
     await order.save();
     res.json({ message: "Order updated", order });
