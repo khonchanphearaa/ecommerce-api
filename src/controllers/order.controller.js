@@ -9,6 +9,14 @@ export const createOrder = async(req, res) =>{
   session.startTransaction();
 
   try {
+
+    /* Add address & phoneNumber owner */
+    const { deliveryAddress, phoneNumber, paymentMethod } = req.body;
+    
+    if(!deliveryAddress || !phoneNumber){
+      return res.status(400).json({message: "Delivery address and phone number are required!"});
+    }
+
     const cart = await Cart.findOne({user: req.userId})
     .populate("items.product")
     .session(session);
@@ -17,6 +25,7 @@ export const createOrder = async(req, res) =>{
       return res.status(400).json({message: "Cart is empty"});
     }
     let totalPrice = 0;
+    let totalQuantity = 0
     const orderItems = [];
 
     /* Validation stock & calculate price */
@@ -30,7 +39,6 @@ export const createOrder = async(req, res) =>{
       if(item.quantity > product.stock){
         throw new Error(`Not enough stock for ${product.name}`);
       }
-      totalPrice += product.price * item.quantity;
 
       /* Push item to array */
       orderItems.push({
@@ -40,6 +48,7 @@ export const createOrder = async(req, res) =>{
       });
       
       totalPrice += product.price * item.quantity;
+      totalQuantity += item.quantity;
     }
 
     /* Create order */
@@ -49,6 +58,10 @@ export const createOrder = async(req, res) =>{
           user: req.userId,
           items: orderItems,
           totalPrice,
+          totalQuantity,
+          deliveryAddress,
+          phoneNumber,
+          paymentMethod: paymentMethod || "BAKONG_KHQR",
           status: "PENDING",
           isPaid: false
           
