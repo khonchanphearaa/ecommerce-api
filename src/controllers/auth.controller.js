@@ -2,9 +2,9 @@ import User from "../models/User.js";
 import bcrypt from "bcryptjs";
 import { generateToken } from "../config/jwt.js";
 
+/* Register (USER Only) */
 export const register = async (req, res) => {
   try {
-    console.log("BODY:", req.body);
     const { name, email, password } = req.body;
 
     if (!name || !email || !password) {
@@ -22,13 +22,18 @@ export const register = async (req, res) => {
       name,
       email,
       password: hashedPassword,
+      /* Role defaults to USER */
     });
 
     res.status(201).json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
+      message: "Register success",
       token: generateToken(user._id),
+      user:{
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
     });
   } catch (error) {
     console.error("REGISTER ERROR:", error);
@@ -49,7 +54,12 @@ export const login = async (req, res) => {
   res.json({
     message: "Login success",
     token: generateToken(user._id),
-    user
+    user:{
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    },
   });
 };
 

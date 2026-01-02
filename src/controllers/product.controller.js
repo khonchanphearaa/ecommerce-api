@@ -6,12 +6,11 @@ export const createProduct = async (req, res) => {
   try {
     const { name, description, price, stock, category } = req.body;
 
-    // Upload images to Cloudinary
-    if (!req.files && req.files.length === 0) {
-        return res.status(400).json({message: "At least one image is required"});
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ message: "At least one image is required" });
     }
 
-    const images = req.files.map(file => file.path); 
+    const images = req.files.map(file => file.path); // cloudinary URLs
 
     const product = await Product.create({
       name,
@@ -24,8 +23,8 @@ export const createProduct = async (req, res) => {
 
     res.status(201).json({ message: "Product created", product });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server error" });
+    console.error(error);  // Make sure you see the error in terminal
+    res.status(500).json({ message: error.message });
   }
 };
 
