@@ -1,7 +1,9 @@
-// dotenv.config();
-connectDB();
 import express from "express";
 import cors from "cors";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
+import mongoSanitize from "express-mongo-sanitize";
+
 import connectDB from "./config/db.js";
 import authRoutes from "./routes/auth.routes.js";
 import productRoutes from "./routes/product.routes.js";
@@ -9,35 +11,49 @@ import categoryRoutes from "./routes/category.routes.js";
 import cartRoutes from "./routes/cart.routes.js";
 import orderRoutes from "./routes/order.routes.js";
 import paymentRoutes from "./routes/payment.routes.js";
-import dotenv from "dotenv";
 
 connectDB();
 
 const app = express();
 
-// Middlewares
-app.use(cors());
-app.use(express.json());
+/* security headers */
+app.use(helmet());
 
-// Public routes
+/* Rate Limit */
+app.use(rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100,
+}));
+
+/* CORS */
+app.use(cors({ origin: "*", credentials: true }));
+
+/* Body Parsers */
+app.use(express.json({ limit: "10kb" }));
+app.use(express.urlencoded({ extended: true }));
+
+/* Sanitization - MongoDB Injection Only */
+app.use((req, res, next) => {
+  // Only sanitize JSON body, never query or params
+  if (req.is("application/json") && req.body) {
+    req.body = mongoSanitize.sanitize(req.body, { replaceWith: "_" });
+  }
+  next();
+});
+
+/* ROUTES */
 app.use("/api/auth", authRoutes);
+app.use("/api/products", productRoutes);     // form-data (multer handles body)
+app.use("/api/categories", categoryRoutes);  // raw JSON
+app.use("/api/cart", cartRoutes);            // raw JSON
+app.use("/api/orders", orderRoutes);         // raw JSON
+app.use("/api/payments", paymentRoutes);     // raw JSON
 
-// Protected routes (must include JWT middleware)
-app.use("/api/products", productRoutes);
-app.use("/api/categories", categoryRoutes);
-app.use("/api/cart", cartRoutes);
-app.use("/api/orders", orderRoutes);
-app.use("/api/payments", paymentRoutes);
+/* Health Check */
+app.get("/", (req, res) => res.json({ message: "E-Commerce API running" }));
 
-// Health check
-app.get("/", (req, res) => {
-  res.json({ message: "E-Commerce API is running" });
-});
-
-// Start server
+/* Start Server */
 const PORT = process.env.PORT || 5050;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
 export default app;
