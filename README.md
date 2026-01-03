@@ -24,46 +24,45 @@ This backend API is design tp support a modern e-commerce application (Web/Mobil
 ## Project Stucture
 ```bash
 
-ecommerce-api
-┃  src                           
-┃  ├─ config                     
-┃  │  ├─ cloudinary.js           
-┃  ├─ db.js                   
-┃  │  └─ jwt.js                  
-┃  ├─ controllers                
-┃  │  ├─ auth.controller.js      
-┃  │  ├─ cart.controller.js      
-┃  │  ├─ category.controller.js  
-┃  │  ├─ order.controller.js     
-┃  │  ├─ payment.controller.js   
-┃  │  └─ product.controller.js   
-┃  ├─ middlewares                
-┃  │  ├─ auth.middleware.js      
-┃  │  └─ upload.js               
-┃  ├─ models                     
-┃  │  ├─ Cart.js                 
-┃  │  ├─ Category.js             
-┃  │  ├─ Order.js                
-┃  │  ├─ Payment.js              
-┃  │  ├─ Product.js              
-┃  │  └─ User.js                 
-┃  ├─ routes                     
-┃  │  ├─ auth.routes.js          
-┃  │  ├─ cart.routes.js          
-┃  │  ├─ category.routes.js      
-┃  │  ├─ order.routes.js         
-┃  │  ├─ payment.routes.js       
-┃  │  └─ product.routes.js       
-┃  ├─ utils                      
-┃  │  ├─ crc16.js                
-┃  │  └─ generateToken.js        
-┃  └─ app.js                     
-┃-- .evn 
-|-- .gitignore
-|-- package.json
-|-- helper.doc
-|-- README.md
-|-- server.js
+ecommerce-api/
+├── src/
+│   ├── config/             
+│   │   ├── cloudinary.js
+│   │   ├── db.js
+│   │   └── jwt.js
+│   ├── controllers/        
+│   │   ├── auth.controller.js
+│   │   ├── cart.controller.js
+│   │   ├── category.controller.js
+│   │   ├── order.controller.js
+│   │   ├── payment.controller.js
+│   │   └── product.controller.js
+│   ├── middlewares/        
+│   │   ├── auth.middleware.js
+│   │   └── upload.js
+│   ├── models/             
+│   │   ├── Cart.js
+│   │   ├── Category.js
+│   │   ├── Order.js
+│   │   ├── Payment.js
+│   │   ├── Product.js
+│   │   └── User.js
+│   ├── routes/             
+│   │   ├── auth.routes.js
+│   │   ├── cart.routes.js
+│   │   ├── category.routes.js
+│   │   ├── order.routes.js
+│   │   ├── payment.routes.js
+│   │   └── product.routes.js
+│   ├── utils/              
+│   │   ├── crc16.js
+│   │   └── generateToken.js
+│   └── app.js              
+├── .env                    
+├── .gitignore              
+├── package.json            
+├── README.md               
+└── server.js               
 
 ```
 ## Authentication Flow
