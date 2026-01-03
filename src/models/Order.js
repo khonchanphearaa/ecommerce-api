@@ -32,17 +32,21 @@ const OrderSchema = new mongoose.Schema(
       required: true,
     },
 
+    /* Add address */
+    totalQuantity: {type: Number, required: true},
+    deliveryAddress: {type: String, required: true},
+    phoneNumber: {type: String},
+    paymentMethod: { type: String, enum: ["BAKONG_KHQR", "CASH", "CARD"], default: "BAKONG_KHQR" },
     status: {
       type: String,
       enum: ["PENDING", "PAID", "SHIPPED", "CANCELLED"],
       default: "PENDING",
     },
-
+    transactionRef: {type: String},
     isPaid: {
       type: Boolean,
       default: false,
     },
-
     paidAt: {
       type: Date,
     },

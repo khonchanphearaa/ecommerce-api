@@ -22,15 +22,20 @@ const paymentSchema = new mongoose.Schema(
 
     currency: {
       type: String,
-      default: "usd",
+      default: "KHR",   /* Cambodia Reil */
     },
 
     paymentMethod: {
       type: String,
-      enum: ["CARD", "CASH", "STRIPE"],
-      default: "STRIPE",
+      enum: ["BAKONG_KHQR", "CASH"],
+      default: "BAKONG_KHQR",
     },
 
+    /* Generated QR data */
+    khqrString:{type: String},
+
+    /* Optional: customer/bank transcation reference */
+    transactionRef: {type: String},
     stripePaymentIntentId: {
       type: String,
     },
