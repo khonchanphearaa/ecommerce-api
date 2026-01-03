@@ -41,19 +41,15 @@ app.use((req, res, next) => {
   next();
 });
 
-/* ROUTES */
-app.use("/api/auth", authRoutes);
-app.use("/api/products", productRoutes);     // form-data (multer handles body)
-app.use("/api/categories", categoryRoutes);  // raw JSON
-app.use("/api/cart", cartRoutes);            // raw JSON
-app.use("/api/orders", orderRoutes);         // raw JSON
-app.use("/api/payments", paymentRoutes);     // raw JSON
+/* ROUTES with API versioing (v1) */
+app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/products", productRoutes);     // form-data (multer handles body)
+app.use("/api/v1/categories", categoryRoutes);  // raw JSON
+app.use("/api/v1/cart", cartRoutes);            // raw JSON
+app.use("/api/v1/orders", orderRoutes);         // raw JSON
+app.use("/api/v1/payments", paymentRoutes);     // raw JSON
 
 /* Health Check */
 app.get("/", (req, res) => res.json({ message: "E-Commerce API running" }));
-
-/* Start Server */
-const PORT = process.env.PORT || 5050;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
 export default app;
