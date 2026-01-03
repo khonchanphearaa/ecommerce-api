@@ -1,5 +1,6 @@
 import express from "express";
 import { protect } from "../middlewares/auth.middleware.js";
+import { isAdmin } from "../middlewares/admin.middleware.js";
 import {
   createCategory,
   getCategories,
@@ -10,15 +11,13 @@ import {
 
 const router = express.Router();
 
-// Public
+// Public routes
 router.get("/", getCategories);
-
-// Public route: get category by ID
 router.get("/:id", getCategoryById);
 
 // Admin Protected
-router.post("/", protect, createCategory);
-router.put("/:id", protect, updateCategory);
-router.delete("/:id", protect, deleteCategory);
+router.post("/", protect, isAdmin, createCategory);
+router.put("/:id", protect, isAdmin, updateCategory);
+router.delete("/:id", protect, isAdmin, deleteCategory);
 
 export default router;

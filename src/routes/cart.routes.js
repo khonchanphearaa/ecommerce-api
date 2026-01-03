@@ -1,5 +1,6 @@
 import express from "express";
 import { protect } from "../middlewares/auth.middleware.js";
+import { isUser } from "../middlewares/user.middleware.js";
 import {
   getCart,
   addToCart,
@@ -9,10 +10,11 @@ import {
 
 const router = express.Router();
 
-router.use(protect); // All cart routes are protected
+// All cart routes are protected and for USER role only
+router.use(protect, isUser); 
 
 router.get("/", getCart);
-router.post("/add",protect, addToCart);
+router.post("/add", addToCart);
 router.put("/update/:productId", updateCartItem);
 router.delete("/remove/:productId", removeCartItem);
 
