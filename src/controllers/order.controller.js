@@ -3,7 +3,7 @@ import Order from "../models/Order.js";
 import Cart from "../models/Cart.js";
 import Product from "../models/Product.js";
 
-// Create Order from Cart
+// Create Order from Cart (USER)
 export const createOrder = async(req, res) =>{
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -17,7 +17,7 @@ export const createOrder = async(req, res) =>{
       return res.status(400).json({message: "Delivery address and phone number are required!"});
     }
 
-    const cart = await Cart.findOne({user: req.userId})
+    const cart = await Cart.findOne({user: req.user._id})
     .populate("items.product")
     .session(session);
 
@@ -40,6 +40,10 @@ export const createOrder = async(req, res) =>{
         throw new Error(`Not enough stock for ${product.name}`);
       }
 
+      /* Reduce stock */
+      product.stock -= item.quantity;
+      await product.save({ session });
+
       /* Push item to array */
       orderItems.push({
         product: product._id,
@@ -55,7 +59,7 @@ export const createOrder = async(req, res) =>{
     const order = await Order.create(
       [
         {
-          user: req.userId,
+          user: req.user._id,
           items: orderItems,
           totalPrice,
           totalQuantity,
@@ -63,15 +67,14 @@ export const createOrder = async(req, res) =>{
           phoneNumber,
           paymentMethod: paymentMethod || "BAKONG_KHQR",
           status: "PENDING",
-          isPaid: false
-          
-        }
+          isPaid: false,
+        },
       ],
       {session}
     );
     
     /* Clear the cart */
-    await Cart.deleteOne({user: req.userId}).session(session);
+    await Cart.deleteOne({user: req.user._id}).session(session);
 
     await session.commitTransaction();
     session.endSession();
@@ -89,21 +92,29 @@ export const createOrder = async(req, res) =>{
 }
 
 
-// Get User Orders
+// Get User Orders (USER)
 export const getUserOrders = async (req, res) => {
   try {
-    const orders = await Order.find({ user: req.userId }).populate("items.product");
+    const orders = await Order.find({ user: req.user._id }).populate("items.product");
     res.json({ message: "Orders fetched", orders });
   } catch (error) {
     res.status(500).json({ message: "Server error" });
   }
 };
 
-// Get Order by ID
+// Get Order by ID (USER/ADMIN)
 export const getOrderById = async (req, res) => {
   try {
     const order = await Order.findById(req.params.id).populate("items.product");
-    if (!order) return res.status(404).json({ message: "Order not found" });
+
+    if(!order){
+      return res.status(404).json({message: "Order not found"});
+    }
+    /* USER can only view their own orders */
+    if(req.user.role === "USER" && order.user.toString() !== req.user._id.toString()){
+      return res.status(403).json({message: "Access denied"});
+    }
+    
     res.json({ message: "Order fetched", order });
   } catch (error) {
     res.status(500).json({ message: "Server error" });
@@ -113,7 +124,7 @@ export const getOrderById = async (req, res) => {
 // Update Order Status (Admin)
 export const updateOrderStatus = async (req, res) => {
   try {
-    const { status, isPaid } = req.body;
+    const { status } = req.body;
     const order = await Order.findById(req.params.id);
     if (!order) return res.status(404).json({ message: "Order not found" });
 
