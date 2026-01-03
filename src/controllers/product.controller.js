@@ -31,8 +31,75 @@ export const createProduct = async (req, res) => {
 // Get All Products
 export const getProducts = async (req, res) => {
   try {
-    const products = await Product.find().populate("category");
-    res.json({ message: "Products fetched", data: products });
+    const {
+      keyword, 
+      category, 
+      minPrice, 
+      maxPrice, 
+      inStock,
+      page = 1,
+      limit = 10,
+      sort = "createdAt",
+      order = "desc"
+    } = req.query;
+
+    const query = {};
+
+    /* Search (name + description) */
+    if (keyword) {
+      query.$or = [
+        { name: { $regex: keyword, $options: "i" } },
+        { description: { $regex: keyword, $options: "i" } }
+      ];
+    }
+
+    /* Filter by category */
+    if (category) {
+      query.category = category;
+    }
+
+    /* Filter by price range */
+    if (minPrice || maxPrice) {
+      query.price = {};
+      if (minPrice) query.price.$gte = Number(minPrice);
+      if (maxPrice) query.price.$lte = Number(maxPrice);
+    }
+
+    /* Filter by stock availability */
+    if (inStock === "true") {
+      query.stock = { $gt: 0 };
+    } else if (inStock === "false") {
+      query.stock = 0;
+    }
+
+    /* Pagination */
+    const pageNumber = Number(page);
+    const limitNumber = Number(limit);
+    const skip = (pageNumber - 1) * limitNumber;
+
+    /* Sorting */
+    const sortOption = {
+      [sort]: order === "asc" ? 1 : -1
+    };
+    
+    /* DB Query */
+    const total = await Product.countDocuments(query);
+
+    const products = await Product.find(query)
+      .populate("category")
+      .sort(sortOption)
+      .skip(skip)
+      .limit(limitNumber);
+
+    res.json({ 
+      message: "Products fetched",
+      count: products.length, 
+      data: products,
+      page: pageNumber,
+      limit: limitNumber,
+      total,
+      totalPages: Math.ceil(total / limitNumber),
+    });
   } catch (error) {
     res.status(500).json({ message: "Server error" });
   }
