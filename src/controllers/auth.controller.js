@@ -11,7 +11,7 @@ export const register = async (req, res) => {
       return res.status(400).json({ message: "All fields are required" });
     }
 
-    const userExists = await User.findOne({ email });
+    const userExists = await User.findOne({ email: email.toLowerCase() });
     if (userExists) {
       return res.status(400).json({ message: "Email already registered" });
     }
@@ -20,7 +20,7 @@ export const register = async (req, res) => {
 
     const user = await User.create({
       name,
-      email,
+      email: email.toLowerCase(),
       password: hashedPassword,
       /* Role defaults to USER */
     });
@@ -47,7 +47,7 @@ export const login = async (req, res) => {
   if(!email || !password){
     return  res.status(400).json({ message: "All fields are required" });
   }
-  const user = await User.findOne({ email: email.toLowerCase() });
+  const user = await User.findOne({ email: email.toLowerCase()}).select("+password");
   if (!user || !user.password) return res.status(400).json({ message: "Invalid credentials" });
 
   const isMatch = await bcrypt.compare(password, user.password);
