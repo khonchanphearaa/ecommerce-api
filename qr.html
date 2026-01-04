@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+<img id="qrImage" />
+<script>
+  const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5NGNmMGIwY2VhY2VhNGU5ZGZmZWZmMyIsImlhdCI6MTc2NzAwNDY4NSwiZXhwIjoxNzY5NTk2Njg1fQ.3_V1Rn7exAmbgAIL4RVVx8Zu4gTC76CSFI5t4JDTCzU";
+  fetch("http://localhost:5050/api/payments/qr", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+     "Authorization": `Bearer ${token}`
+    },
+    body: JSON.stringify({
+      paymentId: "69554d98777556f8f26d1f7a"
+    })
+  })
+  .then(res => res.json())
+  .then(data => {
+    document.getElementById("qrImage").src = data.qrDataUrl;
+  });
+</script>
+</body>
+</html>
+
+
