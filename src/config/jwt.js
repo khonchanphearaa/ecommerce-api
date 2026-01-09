@@ -15,3 +15,16 @@ export const generateRefreshToken = (userId) => {
     { expiresIn: "7d" }
   );
 };
+
+/* Token admin */
+const PROCESS = process.env.JWT_ADMIN_SECRET;
+const EXPRESIN = process.env.JWT_EXPRESIN;
+
+export const generateTokenAdmin = () =>{
+  if(!admin) throw new Error("Admin is requirement to generate token");
+  const token = jwt.sign(
+    {id: admin._id, role: admin.role},
+    PROCESS, {expiresIn: EXPRESIN}
+  );
+  return token
+}
